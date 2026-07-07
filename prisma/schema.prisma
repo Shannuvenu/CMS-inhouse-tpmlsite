@@ -1,0 +1,179 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("EDITOR") // ADMIN | EDITOR
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  sessions Session[]
+
+  @@map("users")
+}
+
+// Added for real login (previously missing — see admin/layout.tsx warning banner).
+model Session {
+  id        String   @id @default(cuid())
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model MediaAsset {
+  id        Int      @id @default(autoincrement())
+  fileName  String   @map("file_name")
+  url       String
+  altText   String?  @map("alt_text")
+  mimeType  String?  @map("mime_type")
+  sizeBytes Int?     @map("size_bytes")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  teamMembers   TeamMember[]
+  careerBanners CareerBanner[]
+
+  @@map("media_assets")
+}
+
+model TeamCategory {
+  id        Int      @id @default(autoincrement())
+  name      String // 'Directors', 'Executive Leadership', ...
+  slug      String   @unique // 'directors', 'executive-leadership'
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+
+  members TeamMember[]
+
+  @@map("team_categories")
+}
+
+model TeamMember {
+  id          Int      @id @default(autoincrement())
+  categoryId  Int      @map("category_id")
+  category    TeamCategory @relation(fields: [categoryId], references: [id])
+  fullName    String   @map("full_name")
+  designation String // 'Joint Managing Director'
+  email       String?
+  bio         String? // rich text / markdown
+  photoId     Int?     @map("photo_id")
+  photo       MediaAsset? @relation(fields: [photoId], references: [id])
+  sortOrder   Int      @default(0) @map("sort_order")
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // NOTE from mam: a person can appear in two groups on the current site
+  // (e.g., K V Subramanya in Executive Leadership AND DH Editorial).
+  // We're using the simplest fix (duplicate rows), not the many-to-many
+  // join table, since the brief doesn't require it. If mam asks, mention
+  // the tradeoff — a join table (team_member_categories) is the normalized fix.
+
+  @@map("team_members")
+}
+
+model JobOpening {
+  id                Int       @id @default(autoincrement())
+  slug              String    @unique // 'video-news-reporter-dh'
+  position          String
+  brand             String? // 'DECCAN HERALD' | 'PRAJAVANI' | NULL
+  location          String
+  experience        String // '2-6yrs with digital news platform'
+  qualification     String
+  numberOfPositions Int       @default(1) @map("number_of_positions")
+  responsibilities  Json      @default("[]")
+  candidateSpecs    Json      @default("[]") @map("candidate_specs")
+  howToApply        String?   @map("how_to_apply")
+  applyEmail        String?   @map("apply_email")
+  status            String    @default("DRAFT") // DRAFT | OPEN | CLOSED
+  sortOrder         Int       @default(0) @map("sort_order")
+  publishedAt       DateTime? @map("published_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("job_openings")
+}
+
+model CareerBanner {
+  id        Int        @id @default(autoincrement())
+  imageId   Int        @map("image_id")
+  image     MediaAsset @relation(fields: [imageId], references: [id])
+  linkUrl   String?    @map("link_url") // deccanherald.com, prajavani.net, ...
+  sortOrder Int        @default(0) @map("sort_order")
+  isActive  Boolean    @default(true) @map("is_active")
+
+  @@map("career_banners")
+}
+
+model SiteSetting {
+  key       String   @id // 'careers_intro', 'careers_phone', 'team_intro', etc.
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  type        String?
+  website     String?
+  tagline     String?
+  description String?
+  launched    String?
+  supplements String[]
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("brands")
+}
+
+model Testimonial {
+  id           String @id @default(cuid())
+  quoteSummary String @map("quote_summary")
+  name         String
+  title        String                        
+  category     String @default("reader") // "reader" or "advertiser"
+
+  @@map("testimonials")
+}
+
+model CaseStudy {
+  id          String @id @default(cuid())
+  title       String
+  description String
+
+  @@map("case_studies")
+}
+
+model Office {
+  id       String          @id @default(cuid())
+  city     String
+  address  String?
+  phone    String?
+  region   String? // "karnataka" or "national"
+  contacts OfficeContact[]
+
+  @@map("offices")
+}
+
+model OfficeContact {
+  id       String @id @default(cuid())
+  officeId String @map("office_id")
+  office   Office @relation(fields: [officeId], references: [id])
+  role     String
+  name     String
+  phone    String?
+  email    String?
+
+  @@map("office_contacts")
+}

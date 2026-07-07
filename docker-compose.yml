@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: pm_admin
+      POSTGRES_PASSWORD: pm_password123
+      POSTGRES_DB: printersmysore
+    ports:
+      - "5433:5432"
+    volumes:
+      - pm_pgdata:/var/lib/postgresql/data
+volumes:
+  pm_pgdata:
