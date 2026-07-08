@@ -1,4 +1,5 @@
 import type { JobOpening } from "@prisma/client";
+import { TextField, TextAreaField, SelectField } from "@/app/admin/FormField";
 
 function toStringList(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -19,152 +20,86 @@ export default function JobOpeningForm({
 
   return (
     <form action={action} className="max-w-xl space-y-5">
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Position *</label>
-        <input
-          name="position"
-          required
-          defaultValue={job?.position ?? ""}
-          placeholder="e.g. Video News Reporter"
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextField
+        label="Position *"
+        name="position"
+        required
+        defaultValue={job?.position ?? ""}
+        placeholder="e.g. Video News Reporter"
+      />
 
       {!job && (
-        <div>
-          <label className="block text-sm font-medium text-zinc-700">
-            Slug (leave blank to auto-generate from position)
-          </label>
-          <input
-            name="slug"
-            placeholder="video-news-reporter-dh"
-            className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-          />
-        </div>
+        <TextField
+          label="Slug (leave blank to auto-generate from position)"
+          name="slug"
+          placeholder="video-news-reporter-dh"
+        />
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Brand</label>
-        <select
-          name="brand"
-          defaultValue={job?.brand ?? ""}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        >
-          <option value="">— None —</option>
-          <option value="DECCAN HERALD">Deccan Herald</option>
-          <option value="PRAJAVANI">Prajavani</option>
-        </select>
-      </div>
+      <SelectField label="Brand" name="brand" defaultValue={job?.brand ?? ""}>
+        <option value="">— None —</option>
+        <option value="DECCAN HERALD">Deccan Herald</option>
+        <option value="PRAJAVANI">Prajavani</option>
+      </SelectField>
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Location *</label>
-        <input
-          name="location"
-          required
-          defaultValue={job?.location ?? ""}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextField label="Location *" name="location" required defaultValue={job?.location ?? ""} />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Experience *</label>
-        <input
-          name="experience"
-          required
-          defaultValue={job?.experience ?? ""}
-          placeholder="2-6yrs with digital news platform"
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextField
+        label="Experience *"
+        name="experience"
+        required
+        defaultValue={job?.experience ?? ""}
+        placeholder="2-6yrs with digital news platform"
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Qualification *</label>
-        <input
-          name="qualification"
-          required
-          defaultValue={job?.qualification ?? ""}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextField
+        label="Qualification *"
+        name="qualification"
+        required
+        defaultValue={job?.qualification ?? ""}
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Number of positions</label>
-        <input
-          name="numberOfPositions"
-          type="number"
-          min={1}
-          defaultValue={job?.numberOfPositions ?? 1}
-          className="mt-1 w-24 rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextField
+        label="Number of positions"
+        name="numberOfPositions"
+        type="number"
+        min={1}
+        defaultValue={job?.numberOfPositions ?? 1}
+        className="w-24"
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          Responsibilities (one per line)
-        </label>
-        <textarea
-          name="responsibilities"
-          rows={5}
-          defaultValue={responsibilities}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextAreaField
+        label="Responsibilities (one per line)"
+        name="responsibilities"
+        rows={5}
+        defaultValue={responsibilities}
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">
-          Candidate specs (one per line)
-        </label>
-        <textarea
-          name="candidateSpecs"
-          rows={5}
-          defaultValue={candidateSpecs}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextAreaField
+        label="Candidate specs (one per line)"
+        name="candidateSpecs"
+        rows={5}
+        defaultValue={candidateSpecs}
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">How to apply</label>
-        <textarea
-          name="howToApply"
-          rows={3}
-          defaultValue={job?.howToApply ?? ""}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextAreaField label="How to apply" name="howToApply" rows={3} defaultValue={job?.howToApply ?? ""} />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Apply email</label>
-        <input
-          name="applyEmail"
-          type="email"
-          defaultValue={job?.applyEmail ?? ""}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextField label="Apply email" name="applyEmail" type="email" defaultValue={job?.applyEmail ?? ""} />
 
       <div className="flex gap-6">
-        <div>
-          <label className="block text-sm font-medium text-zinc-700">Status</label>
-          <select
-            name="status"
-            defaultValue={job?.status ?? "DRAFT"}
-            className="mt-1 rounded border border-zinc-300 px-3 py-2 text-sm"
-          >
-            <option value="DRAFT">Draft (hidden)</option>
-            <option value="OPEN">Open (visible on site)</option>
-            <option value="CLOSED">Closed</option>
-          </select>
-        </div>
+        <SelectField label="Status" name="status" defaultValue={job?.status ?? "DRAFT"} className="w-auto">
+          <option value="DRAFT">Draft (hidden)</option>
+          <option value="OPEN">Open (visible on site)</option>
+          <option value="CLOSED">Closed</option>
+        </SelectField>
 
-        <div>
-          <label className="block text-sm font-medium text-zinc-700">Sort order</label>
-          <input
-            name="sortOrder"
-            type="number"
-            defaultValue={job?.sortOrder ?? 0}
-            className="mt-1 w-24 rounded border border-zinc-300 px-3 py-2 text-sm"
-          />
-        </div>
+        <TextField
+          label="Sort order"
+          name="sortOrder"
+          type="number"
+          defaultValue={job?.sortOrder ?? 0}
+          className="w-24"
+        />
       </div>
 
       <div className="pt-2">

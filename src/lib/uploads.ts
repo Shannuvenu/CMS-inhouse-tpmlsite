@@ -1,6 +1,8 @@
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { slugify } from "@/lib/slugify";
+import { prisma } from "@/lib/prisma";
+import type { MediaAsset } from "@prisma/client";
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
@@ -42,4 +44,18 @@ export async function saveUploadedFile(file: File): Promise<{
     mimeType: file.type,
     sizeBytes: file.size,
   };
+}
+
+/** Saves an uploaded image and creates its MediaAsset row in one step. */
+export async function saveUploadedImageAsset(file: File, altText: string | null): Promise<MediaAsset> {
+  const saved = await saveUploadedFile(file);
+  return prisma.mediaAsset.create({
+    data: {
+      fileName: saved.fileName,
+      url: saved.url,
+      mimeType: saved.mimeType,
+      sizeBytes: saved.sizeBytes,
+      altText,
+    },
+  });
 }

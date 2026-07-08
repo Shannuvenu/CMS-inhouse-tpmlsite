@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { TeamCategory, TeamMember } from "@prisma/client";
+import { TextField, TextAreaField, SelectField } from "@/app/admin/FormField";
 
 export default function TeamMemberForm({
   action,
@@ -14,65 +15,30 @@ export default function TeamMemberForm({
 }) {
   return (
     <form action={action} className="max-w-xl space-y-5">
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Full name *</label>
-        <input
-          name="fullName"
-          required
-          defaultValue={member?.fullName ?? ""}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextField label="Full name *" name="fullName" required defaultValue={member?.fullName ?? ""} />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Designation *</label>
-        <input
-          name="designation"
-          required
-          defaultValue={member?.designation ?? ""}
-          placeholder="e.g. Joint Managing Director"
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextField
+        label="Designation *"
+        name="designation"
+        required
+        defaultValue={member?.designation ?? ""}
+        placeholder="e.g. Joint Managing Director"
+      />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Category *</label>
-        <select
-          name="categoryId"
-          required
-          defaultValue={member?.categoryId ?? ""}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        >
-          <option value="" disabled>
-            Select a category
+      <SelectField label="Category *" name="categoryId" required defaultValue={member?.categoryId ?? ""}>
+        <option value="" disabled>
+          Select a category
+        </option>
+        {categories.map((cat) => (
+          <option key={cat.id} value={cat.id}>
+            {cat.name}
           </option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-      </div>
+        ))}
+      </SelectField>
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Email</label>
-        <input
-          name="email"
-          type="email"
-          defaultValue={member?.email ?? ""}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextField label="Email" name="email" type="email" defaultValue={member?.email ?? ""} />
 
-      <div>
-        <label className="block text-sm font-medium text-zinc-700">Bio</label>
-        <textarea
-          name="bio"
-          rows={4}
-          defaultValue={member?.bio ?? ""}
-          className="mt-1 w-full rounded border border-zinc-300 px-3 py-2 text-sm"
-        />
-      </div>
+      <TextAreaField label="Bio" name="bio" rows={4} defaultValue={member?.bio ?? ""} />
 
       <div>
         <label className="block text-sm font-medium text-zinc-700">Photo</label>
@@ -98,15 +64,13 @@ export default function TeamMemberForm({
       </div>
 
       <div className="flex gap-6">
-        <div>
-          <label className="block text-sm font-medium text-zinc-700">Sort order</label>
-          <input
-            name="sortOrder"
-            type="number"
-            defaultValue={member?.sortOrder ?? 0}
-            className="mt-1 w-24 rounded border border-zinc-300 px-3 py-2 text-sm"
-          />
-        </div>
+        <TextField
+          label="Sort order"
+          name="sortOrder"
+          type="number"
+          defaultValue={member?.sortOrder ?? 0}
+          className="w-24"
+        />
 
         <div className="flex items-end pb-2">
           <label className="flex items-center gap-2 text-sm text-zinc-700">
