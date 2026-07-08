@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Brands",
@@ -27,7 +27,7 @@ export default async function BrandsPage() {
       ) : (
         <ul className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2">
           {brands.map((brand) => (
-            <li key={brand.id} className="rounded-lg border border-zinc-200 p-6">
+            <li key={brand.id} className="rounded-lg border border-zinc-200 p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
               <article>
                 <h2 className="text-xl font-semibold text-zinc-900">{brand.name}</h2>
                 {brand.type && <p className="mt-1 text-sm text-zinc-500">{brand.type}</p>}

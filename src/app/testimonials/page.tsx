@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Testimonials",
@@ -21,7 +21,7 @@ export default async function TestimonialsPage() {
       <h2 className="mt-12 text-xl font-semibold text-zinc-900">From our readers</h2>
       <ul className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
         {readers.map((t) => (
-          <li key={t.id} className="rounded-lg border border-zinc-200 p-5">
+          <li key={t.id} className="rounded-lg border border-zinc-200 p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
             <blockquote className="text-sm text-zinc-700">{t.quoteSummary}</blockquote>
             <p className="mt-3 text-sm font-medium text-zinc-900">{t.name}</p>
             <p className="text-xs text-zinc-500">{t.title}</p>

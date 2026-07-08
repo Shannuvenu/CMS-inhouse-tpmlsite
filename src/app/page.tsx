@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getSiteSettings } from "@/lib/settings";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Home",
@@ -30,16 +31,17 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="relative bg-zinc-900 bg-[url('/hero.jpg')] bg-cover bg-center text-white">
+      <section className="relative bg-zinc-900 text-white">
+        <Image src="/hero.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative mx-auto max-w-5xl px-6 py-40 text-center">
           <p className="text-sm font-semibold uppercase tracking-wide text-white/80">
             {settings.site_founded ? `Since ${settings.site_founded}` : "The Printers (Mysore) Pvt. Ltd."}
           </p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl animate-fade-in-up">
             {settings.site_tagline ?? "The Storytellers of Karnataka"}
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-white/90">
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-white/90 animate-fade-in-up">
             Publishers of Deccan Herald, Prajavani, Sudha and Mayura — reaching readers
             across every corner of Karnataka, in print and online.
           </p>
@@ -54,8 +56,14 @@ export default async function HomePage() {
           {stats.map((stat) => (
             <div key={stat.label} className="border-l-2 border-zinc-900 pl-4">
               <dt className="text-sm font-medium text-zinc-500">{stat.label}</dt>
-              <dd className="mt-1 text-3xl font-bold text-zinc-900">{stat.value}</dd>
-              {stat.note && <p className="mt-1 text-xs text-zinc-500">{stat.note}</p>}
+              <dd className="mt-1 text-3xl font-bold text-zinc-900">
+                {stat.value}
+                {stat.note && (
+                  <span className="mt-1 block text-xs font-normal text-zinc-500">
+                    {stat.note}
+                  </span>
+                )}
+              </dd>
             </div>
           ))}
         </dl>

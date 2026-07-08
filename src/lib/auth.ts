@@ -24,12 +24,12 @@ export async function createSession(userId: number): Promise<void> {
   const token = signSessionId(session.id);
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    expires: session.expiresAt,
-  });
+  httpOnly: true,
+  secure: process.env.COOKIE_SECURE === "true",
+  sameSite: "lax",
+  path: "/",
+  expires: session.expiresAt,
+});
 }
 
 export async function destroySession(): Promise<void> {
