@@ -4,17 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/brands", label: "Brands" },
-  { href: "/legacy", label: "Legacy" },
-  { href: "/team", label: "Team" },
-  { href: "/careers", label: "Careers" },
-  { href: "/contact", label: "Contact" },
-  { href: "/testimonials", label: "Testimonials" },
-];
+type MenuLink = { id: number; label: string; url: string };
 
-export default function Header() {
+export default function Header({ items }: { items: MenuLink[] }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
@@ -42,13 +34,13 @@ export default function Header() {
               isHome ? "text-white/90" : "text-zinc-600"
             }`}
           >
-            {NAV_LINKS.map((link) => (
-              <li key={link.href}>
+            {items.map((item) => (
+              <li key={item.id}>
                 <Link
-                  href={link.href}
+                  href={item.url}
                   className={isHome ? "hover:text-white" : "hover:text-zinc-900"}
                 >
-                  {link.label}
+                  {item.label}
                 </Link>
               </li>
             ))}

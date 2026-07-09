@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { SYNC_HANDLERS } from "@/app/admin/content/syncHandlers";
 import { deleteContentBlock } from "@/app/admin/content/saveContent";
 import DeleteButton from "@/app/admin/DeleteButton";
 
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminContentPage() {
   const blocks = await prisma.pageContent.findMany({ orderBy: { key: "asc" } });
+  const syncedKeys = Object.entries(SYNC_HANDLERS);
 
   return (
     <div>
@@ -14,8 +16,8 @@ export default async function AdminContentPage() {
         <div>
           <h1 className="text-xl font-bold text-zinc-900">Page Content (JSON)</h1>
           <p className="mt-1 text-sm text-zinc-500">
-            &quot;brands&quot; syncs directly into the real Brands table. Any other key
-            (e.g. &quot;legacy&quot;) is stored as-is and read by that page.
+            The keys below sync directly into their real database tables. Any other key
+            (e.g. &quot;legacy&quot;) is stored as-is and read by a page with that name.
           </p>
         </div>
         <Link
@@ -27,13 +29,18 @@ export default async function AdminContentPage() {
       </div>
 
       <div className="mt-8 space-y-2">
-        <Link
-          href="/admin/content/new?key=brands"
-          className="block rounded-lg border border-zinc-200 p-4 hover:border-zinc-400"
-        >
-          <span className="font-semibold text-zinc-900">brands</span>
-          <span className="ml-2 text-xs text-zinc-500">(synced to Brand table — always available)</span>
-        </Link>
+        {syncedKeys.map(([key, handler]) => (
+          <Link
+            key={key}
+            href={`/admin/content/new?key=${key}`}
+            className="block rounded-lg border border-zinc-200 p-4 hover:border-zinc-400"
+          >
+            <span className="font-semibold text-zinc-900">{key}</span>
+            <span className="ml-2 text-xs text-zinc-500">
+              ({handler.label} — synced to real table)
+            </span>
+          </Link>
+        ))}
 
         {blocks.map((block) => (
           <div
