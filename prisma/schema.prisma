@@ -73,11 +73,7 @@ model TeamMember {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // NOTE from mam: a person can appear in two groups on the current site
-  // (e.g., K V Subramanya in Executive Leadership AND DH Editorial).
-  // We're using the simplest fix (duplicate rows), not the many-to-many
-  // join table, since the brief doesn't require it. If mam asks, mention
-  // the tradeoff — a join table (team_member_categories) is the normalized fix.
+
 
   @@map("team_members")
 }
