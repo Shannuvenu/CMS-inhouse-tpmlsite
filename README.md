@@ -1,106 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# The Printers (Mysore) Pvt. Ltd. — CMS
 
-## Getting Started
+A full-stack content management system for a newspaper publisher — a public
+website plus a password-protected admin dashboard, built with Next.js,
+PostgreSQL, and Prisma.
 
-First, run the development server:
+Publishes content for Deccan Herald, Prajavani, Sudha, and Mayura.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What this is
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Two things in one Next.js app:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Public website** — Home, Brands, Team, Careers, Contact, Testimonials,
+   Legacy. All server-rendered, all reading live from PostgreSQL.
+2. **Admin CMS** at `/admin` — session-based login, then full CRUD for team
+   members, job openings, career banners, a bulk JSON content editor, and
+   header/footer menu management. No code changes needed for day-to-day
+   content updates.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech stack
 
-## Learn More
+| Tool | Role |
+|---|---|
+| Next.js (App Router) | Framework — public pages + admin panel in one codebase |
+| TypeScript | Type safety across the whole app |
+| PostgreSQL | Relational database |
+| Prisma | ORM — type-safe queries, migrations |
+| bcryptjs | Password hashing for admin accounts |
+| Tailwind CSS | Styling |
+| Docker | Local Postgres, identical across machines |
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture, briefly
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Public pages are Server Components.** Each page is an `async function`
+  that calls Prisma directly (e.g. `prisma.teamMember.findMany()`) and
+  renders the result — no separate API layer for reads.
+- **Admin writes use Server Actions.** Forms in `/admin` call server
+  functions directly (`src/app/admin/actions.ts`) — no hand-built API
+  endpoints for mutations either.
+- **Auth is session-based, not JWT.** Login creates a row in a `Session`
+  table and sets a signed HTTP-only cookie. `middleware.ts` verifies the
+  cookie's signature on every `/admin/*` request (fast, no DB call); the
+  admin layout then does a real database lookup to confirm the session
+  hasn't expired or been revoked. Chosen over JWT because access can be
+  instantly revoked by deleting a row — relevant with a small, known set of
+  admin users.
+- **Content stays in sync via `revalidatePath`.** Every admin write calls
+  this after saving, so the public page reflects the change on the very
+  next request — no caching lag, no manual rebuild.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Pages
 
-# Stage 3 — Admin Dashboard (No Auth Yet, By Design)
+| Route | What it shows | Data source |
+|---|---|---|
+| `/` | Hero, live stats | `SiteSetting` |
+| `/brands` | Deccan Herald, Prajavani, Sudha, Mayura | `Brand` |
+| `/team` | Team grouped by category | `TeamCategory` + `TeamMember` |
+| `/careers` | Open job listings | `JobOpening` (status = OPEN) |
+| `/careers/[slug]` | One job's detail page | Dynamic route |
+| `/contact` | Offices + contacts by region | `Office` + `OfficeContact` |
+| `/testimonials` | Reader/advertiser quotes | `Testimonial` |
+| `/legacy` | Freeform history page | `PageContent` (JSON, key="legacy") |
+| `/login` | Admin sign-in | `User`, bcrypt-verified |
+| `/admin` | Dashboard | Protected by middleware + session check |
+| `/admin/team`, `/admin/careers`, `/admin/career-banners` | CRUD forms | Server Actions |
+| `/admin/content` | Bulk JSON editor | Syncs into real tables, or freeform `PageContent` |
+| `/admin/menus` | Header/footer nav management | `MenuItem` |
 
-## What's new
-Full CRUD admin panel at `/admin` for Team Members and Job Openings, using
-Next.js Server Actions (no separate API routes needed — that's the modern
-Next.js pattern, not a shortcut).
+## Getting started (local development)
 
-- `/admin` — dashboard with counts
-- `/admin/team` — list, add, edit, delete team members (grouped by category)
-- `/admin/careers` — list, add, edit, delete job openings
-- Deleting asks for confirmation first (can't be undone, and there's no
-  "trash" — it's a real DB delete).
-- Saving a team member or job change calls `revalidatePath` on the matching
-  public page, so the public site updates immediately, same request. Test
-  this explicitly, don't just trust it.
-
-## ⚠️ Read this before you do anything else
-**There is no login. `/admin` is wide open to anyone with the URL.** This
-was your explicit call — build CRUD first, auth last — and that's a fine
-sequencing decision for building this out correctly. But it means:
-- Do NOT deploy this build to a public URL (Vercel, etc.) as-is.
-- If you demo this to mam before auth exists, say so directly: "auth isn't
-  wired in yet, that's the next piece." Don't let her discover it herself.
-- The moment you build auth, every function in `src/app/admin/actions.ts`
-  needs a session check added as its first line. I left a comment block at
-  the top of that file explaining exactly what goes where.
-
-## Run it
 ```bash
 npm install
-docker compose up -d
-docker ps                          # confirm the DB container is up
-npx prisma generate                # regenerate client (schema unchanged, but do this after any npm install)
+docker compose up -d          # starts local Postgres
+docker ps                     # confirm the container is running
+npx prisma migrate dev        # applies all migrations
+npx prisma db seed            # creates 5 admin accounts + sample content
+npx ts-node --transpile-only prisma/seed-menu.ts   # populates header/footer nav
 npm run dev
 ```
-Open `http://localhost:3000/admin` in your browser.
 
-## Test the full loop — do this, don't skip it
-1. Go to `/admin/team` → Add team member → fill in name, designation, pick
-   a category → Create.
-2. Open `/team` in another tab → confirm the new member shows up.
-3. Go back to `/admin/team` → Edit that member → change the designation →
-   Save.
-4. Refresh `/team` → confirm the change reflects.
-5. Delete the member → confirm the confirmation dialog appears → confirm →
-   check `/team` again → member is gone.
-6. Repeat the same loop for `/admin/careers` and `/careers` — including
-   setting status to "Open" and confirming it actually shows up (jobs with
-   status "Draft" intentionally stay hidden from the public careers page —
-   that's not a bug, that's the point of having a status field).
+Open `http://localhost:3000`.
 
-If any of those 6 steps don't behave as described, something's broken —
-tell me exactly which step failed and what you saw instead.
+Admin login credentials are in `SEED_CREDENTIALS.md` (not committed — see
+`.gitignore`). Log in at `/login`, then visit `/admin`.
 
-## What's still missing (don't tell mam this part is done)
-- **Login/auth** — next task, as agreed.
-- **Image uploads** — `TeamMember.photoId` and `CareerBanner` exist in the
-  schema but there's no upload UI or file storage wired up. Team photos
-  currently can't be added through the admin panel at all. Decide your
-  storage approach (local disk vs. Cloudinary/S3) before building this —
-  it changes the implementation.
-- **Form validation beyond "required" fields** — e.g. nothing stops
-  duplicate emails, garbage-length text, or a negative sort order.
-- **TeamCategory management** — categories were seeded once and can't be
-  added/edited/deleted through the UI. Fine for now since your 4 categories
-  match mam's example exactly, but flag it if she asks for a 5th category.
+## Testing the full admin → public loop
 
-## Known non-issue if you see it
-Running `next build` inside sandboxed/Linux CI environments different from
-your own machine can throw font-fetch or native-binary errors unrelated to
-this code (cross-platform binary mismatch, blocked font CDN). If you hit
-something like that specifically in a CI pipeline, it's an environment
-problem, not a code problem — run `npm run build` locally on your own
-machine to get the real signal.
+1. `/admin/team` → add a team member → open `/team` in another tab → confirm they appear
+2. `/admin/menus` → add a header item → refresh any public page → confirm it's in the nav
+3. `/admin/content` → click `brands` → edit a tagline → save → check `/brands`
 
+If any of these don't reflect immediately, something's broken — that live
+sync is the core feature of the CMS.
+
+## Deployment
+
+See `DEPLOYMENT.md` for the full walkthrough (Vercel + Neon Postgres).
+
+**One required step for Vercel specifically:** add this to `package.json`
+under `"scripts"` before deploying:
+```json
+"postinstall": "prisma generate"
+```
+Without it, Vercel's dependency caching can skip regenerating the Prisma
+Client, causing a build-time error. This is a known Vercel + Prisma
+interaction, not a bug in this codebase — see
+[pris.ly/d/vercel-build](https://pris.ly/d/vercel-build).
+
+## What's not built yet
+
+- **Cloud image storage** — uploads currently save to local disk
+  (`public/uploads`), which works locally but won't persist on serverless
+  hosts like Vercel. Needs an S3 (or similar) swap before production
+  image uploads are reliable.
+- **Password change UI** — seeded admin passwords should be rotated before
+  any real deployment; currently done by editing `prisma/seed.ts` and
+  re-seeding.
+
+## Project structure
+
+```
+prisma/
+  schema.prisma       — all database models
+  seed.ts             — admin users + sample content
+  seed-menu.ts         — header/footer nav items
+src/
+  app/
+    (public pages)     — page.tsx, brands/, team/, careers/, contact/, testimonials/, legacy/
+    login/              — sign-in page + server action
+    admin/              — dashboard, CRUD pages, content editor, menu management
+  components/           — Header, Footer
+  lib/                  — prisma client, auth, session signing, validation helpers
+  middleware.ts          — protects /admin/*
+```
