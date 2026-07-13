@@ -1,19 +1,22 @@
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { slugify } from "@/lib/slugify";
+import { put } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
 import type { MediaAsset } from "@prisma/client";
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
 /**
- * Saves an uploaded image File to /public/uploads and returns the metadata
- * needed to create a MediaAsset row. Local-disk storage only — fine for a
- * college project and for demoing locally, but this does NOT work if you
- * later deploy to Vercel (its filesystem is read-only/ephemeral in
- * production). If you deploy, this needs to point at S3/Cloudinary instead
- * — same function signature, different implementation inside.
+ * Saves an uploaded image File to Vercel Blob storage and returns the
+ * metadata needed to create a MediaAsset row.
+ *
+ * Previously wrote to /public/uploads via fs.writeFile — worked locally
+ * and would work on a real persistent server (EC2), but silently failed
+ * on Vercel: its serverless functions run on a read-only, ephemeral
+ * filesystem, so nothing written there ever actually persisted. Vercel
+ * Blob is the correct managed storage for this deployment target.
+ *
+ * Requires the Blob store to be connected in the Vercel dashboard
+ * (Project → Storage → Create Database → Blob), which auto-provisions
+ * the BLOB_READ_WRITE_TOKEN environment variable used implicitly here.
  */
 export async function saveUploadedFile(file: File): Promise<{
   url: string;
@@ -28,19 +31,14 @@ export async function saveUploadedFile(file: File): Promise<{
     throw new Error("Image is too large — max 5MB.");
   }
 
-  await mkdir(UPLOAD_DIR, { recursive: true });
-
-  const ext = path.extname(file.name) || "";
-  const base = slugify(path.basename(file.name, ext)) || "upload";
-  const fileName = `${Date.now()}-${base}${ext}`;
-  const filePath = path.join(UPLOAD_DIR, fileName);
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filePath, buffer);
+  const blob = await put(file.name, file, {
+    access: "public",
+    addRandomSuffix: true, // avoids collisions between uploads with the same filename
+  });
 
   return {
-    url: `/uploads/${fileName}`,
-    fileName,
+    url: blob.url,
+    fileName: blob.pathname,
     mimeType: file.type,
     sizeBytes: file.size,
   };
