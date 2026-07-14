@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
 import { saveUploadedImageAsset } from "@/lib/uploads";
-import { requireAdminUser } from "@/lib/auth";
+import { requireSectionAccess } from "@/lib/access";
 
 function toLines(value: FormDataEntryValue | null): string[] {
   if (typeof value !== "string") return [];
@@ -51,7 +51,7 @@ function parseTeamMemberInput(formData: FormData): TeamMemberInput {
 }
 
 export async function createTeamMember(formData: FormData) {
-  await requireAdminUser();
+  await requireSectionAccess("team");
   const input = parseTeamMemberInput(formData);
   const photo = formData.get("photo");
 
@@ -76,7 +76,7 @@ export async function createTeamMember(formData: FormData) {
 }
 
 export async function updateTeamMember(id: number, formData: FormData) {
-  await requireAdminUser();
+  await requireSectionAccess("team");
   const input = parseTeamMemberInput(formData);
   const photo = formData.get("photo");
 
@@ -94,9 +94,6 @@ export async function updateTeamMember(id: number, formData: FormData) {
   if (photo instanceof File && photo.size > 0) {
     const asset = await saveUploadedImageAsset(photo, input.fullName);
     photoId = asset.id;
-    // NOTE: the old MediaAsset row (if any) is left orphaned in the DB —
-    // replacing a photo doesn't delete the previous upload or its file on
-    // disk. Fine for a college project; a real system would clean this up.
   }
 
   await prisma.teamMember.update({ where: { id }, data: { ...input, photoId } });
@@ -107,13 +104,15 @@ export async function updateTeamMember(id: number, formData: FormData) {
 }
 
 export async function deleteTeamMember(id: number) {
-  await requireAdminUser();
+  await requireSectionAccess("team");
   await prisma.teamMember.delete({ where: { id } });
   revalidatePath("/team");
   revalidatePath("/admin/team");
 }
 
 // ---------- Job Openings ----------
+// Per mam: create/delete only. No editing an existing posting — to change
+// one, delete it and add a fresh one.
 
 type JobOpeningInput = {
   position: string;
@@ -168,13 +167,12 @@ function parseJobOpeningInput(formData: FormData): JobOpeningInput {
 }
 
 export async function createJobOpening(formData: FormData) {
-  await requireAdminUser();
+  await requireSectionAccess("careers");
   const input = parseJobOpeningInput(formData);
 
   const baseSlug = slugify(String(formData.get("slug") ?? "") || input.position);
   let slug = baseSlug;
 
-  // Handle slug collisions by appending -2, -3, etc. rather than crashing.
   let attempt = 0;
   while (true) {
     const existing = await prisma.jobOpening.findUnique({ where: { slug } });
@@ -197,40 +195,20 @@ export async function createJobOpening(formData: FormData) {
   redirect("/admin/careers");
 }
 
-export async function updateJobOpening(id: number, formData: FormData) {
-  await requireAdminUser();
-  const input = parseJobOpeningInput(formData);
-
-  const current = await prisma.jobOpening.findUnique({ where: { id } });
-  if (!current) throw new Error("Job posting not found.");
-
-  await prisma.jobOpening.update({
-    where: { id },
-    data: {
-      ...input,
-      publishedAt:
-        input.status === "OPEN" && !current.publishedAt ? new Date() : current.publishedAt,
-    },
-  });
-
-  revalidatePath("/careers");
-  revalidatePath(`/careers/${current.slug}`);
-  revalidatePath("/admin/careers");
-  redirect("/admin/careers");
-}
-
 export async function deleteJobOpening(id: number) {
-  await requireAdminUser();
+  await requireSectionAccess("careers");
   const job = await prisma.jobOpening.delete({ where: { id } });
   revalidatePath("/careers");
   revalidatePath(`/careers/${job.slug}`);
   revalidatePath("/admin/careers");
 }
 
-// ---------- Career Banners (the logo carousel on the careers page) ----------
+// ---------- Career Banners ----------
+// Per mam: create/delete only. No toggling an existing banner's active
+// state — remove and re-add if you want it off, add a new one for on.
 
 export async function createCareerBanner(formData: FormData) {
-  await requireAdminUser();
+  await requireSectionAccess("career-banners");
   const linkUrl = String(formData.get("linkUrl") ?? "").trim() || null;
   const sortOrder = Number(formData.get("sortOrder") ?? 0);
   const image = formData.get("image");
@@ -250,15 +228,8 @@ export async function createCareerBanner(formData: FormData) {
   redirect("/admin/career-banners");
 }
 
-export async function toggleCareerBannerActive(id: number, isActive: boolean) {
-  await requireAdminUser();
-  await prisma.careerBanner.update({ where: { id }, data: { isActive } });
-  revalidatePath("/careers");
-  revalidatePath("/admin/career-banners");
-}
-
 export async function deleteCareerBanner(id: number) {
-  await requireAdminUser();
+  await requireSectionAccess("career-banners");
   await prisma.careerBanner.delete({ where: { id } });
   revalidatePath("/careers");
   revalidatePath("/admin/career-banners");

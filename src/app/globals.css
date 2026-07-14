@@ -105,3 +105,6 @@ html {
 a, button {
   transition: color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
 }
+html {
+  scroll-behavior: smooth;
+}

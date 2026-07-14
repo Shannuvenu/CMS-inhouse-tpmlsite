@@ -1,9 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
-import { deleteCareerBanner, toggleCareerBannerActive } from "@/app/admin/actions";
+import { deleteCareerBanner } from "@/app/admin/actions";
 import DeleteButton from "@/app/admin/DeleteButton";
-import ToggleActiveButton from "@/app/admin/career-banners/ToggleActiveButton";
 
 export const dynamic = "force-dynamic";
 
@@ -46,11 +45,7 @@ export default async function AdminCareerBannersPage() {
               <p className="mt-2 truncate text-xs text-zinc-500">
                 {banner.linkUrl ?? "No link"}
               </p>
-              <div className="mt-2 flex items-center justify-between">
-                <ToggleActiveButton
-                  isActive={banner.isActive}
-                  onToggle={toggleCareerBannerActive.bind(null, banner.id, !banner.isActive)}
-                />
+              <div className="mt-2 flex items-center justify-end">
                 <DeleteButton
                   action={deleteCareerBanner.bind(null, banner.id)}
                   confirmMessage="Delete this banner? This can't be undone."
