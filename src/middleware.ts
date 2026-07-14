@@ -1,20 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/session-token";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+
+const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isAdminRoute(req)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
-  matcher: ["/admin/:path*"],
-  runtime: "nodejs",
+  matcher: ["/((?!_next|.*\\..*).*)"],
 };
-
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const sessionId = verifySessionToken(token);
-
-  if (!sessionId) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  return NextResponse.next();
-}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Poppins } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getMenuItems } from "@/lib/menu";
@@ -33,15 +34,17 @@ export default async function RootLayout({
   const headerItems = await getMenuItems("HEADER");
 
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${poppins.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
-        <Header items={headerItems} />
-        <main className="flex-1">{children}</main>
-        <Footer />
-      </body>
-    </html>
+    <ClerkProvider signInUrl="/login" afterSignOutUrl="/login">
+      <html
+        lang="en"
+        className={`${geistSans.variable} ${poppins.variable} h-full antialiased`}
+      >
+        <body className="min-h-full flex flex-col">
+          <Header items={headerItems} />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

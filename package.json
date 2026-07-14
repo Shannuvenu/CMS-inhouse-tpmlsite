@@ -10,6 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.5.17",
     "@prisma/client": "^5.19.1",
     "@vercel/blob": "^2.6.1",
     "bcryptjs": "^2.4.3",

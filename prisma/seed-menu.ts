@@ -18,13 +18,21 @@ const FOOTER_ITEMS = [
 ];
 
 async function main() {
+  await prisma.menuItem.deleteMany();
+
   await prisma.menuItem.createMany({
     data: HEADER_ITEMS.map((item) => ({ ...item, location: 'HEADER' })),
   });
   await prisma.menuItem.createMany({
     data: FOOTER_ITEMS.map((item) => ({ ...item, location: 'FOOTER' })),
   });
-  console.log('Menu items seeded.');
+
+  console.log('Menu items reset and seeded.');
 }
 
-main().catch((e) => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());
