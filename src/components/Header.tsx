@@ -3,20 +3,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 
 type MenuLink = { id: number; label: string; url: string };
 
 export default function Header({ items }: { items: MenuLink[] }) {
+  const visible = useHideOnScroll();
   const pathname = usePathname();
   const isHome = pathname === "/";
 
   return (
     <header
-      className={
-        isHome
-          ? "absolute inset-x-0 top-0 z-50 bg-transparent"
-          : "relative border-b border-zinc-200 bg-white"
-      }
+      className={`inset-x-0 top-0 z-50 transition-transform duration-300 ${
+        isHome ? "fixed" : "sticky"
+      } ${visible ? "translate-y-0" : "-translate-y-full"} ${
+        isHome ? "bg-transparent" : "border-b border-zinc-200 bg-white"
+      }`}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2">
