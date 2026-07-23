@@ -24,7 +24,7 @@ export default async function Footer() {
             ))}
           </nav>
         )}
-        <p className="mt-6 text-sm text-zinc-500">&copy;  @2026 All Rights Reserved</p>
+        <p className="mt-6 text-sm text-zinc-500">&copy;  2026 All Rights Reserved</p>
       </div>
     </footer>
   );
